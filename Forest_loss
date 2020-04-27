@@ -1,0 +1,44 @@
+var LC = ee.ImageCollection("MODIS/006/MCD12Q1");
+var GAUL = ee.FeatureCollection("FAO/GAUL/2015/level0"); //confini, Colombia= 57
+
+//carico dalla collezione il 2015
+var LC2015 =(LC.filterDate('2015-01-01','2015-12-31')).first().select('LC_Type1');
+var LC2001 =(LC.filterDate('2001-01-01','2001-12-31')).first().select('LC_Type1');
+
+//start date, end date// .first prende il primo elemento di una collezione e lo trasforma in immagine //LC_Type prende la banda 1
+
+
+var roi = GAUL.filter(ee.Filter.eq("ADM0_NAME", "Colombia")); //Nome campo, field value
+
+print(roi)
+Map.centerObject(roi, 7); //centra la mappa sulla colombia
+Map.addLayer(roi, {}, "roi");
+var bounds = roi.geometry().bounds();
+
+var palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
+               '74A901', '66A000', '529400', '3E8601', '207401', '056201',
+               '004C00', '023B01', '012E01', '011D01', '011301']; // dizionario con dodice colore per ogni classe
+
+
+Map.addLayer(LC2015.clip(roi),{min:0, max:16, palette:palette})
+
+//LC Change
+
+var delta = LC2001.subtract(LC2015)  //sottrai 2001 e 2015
+
+// var delta_forest =  delta.updateMask(LC2001.lte(5))  //mascheriamo le prime 5 classi che sono di foresta
+
+var change  = LC2001.lte(6).and(LC2015.gt(5)) //gt = grater than le classi che non sono di foresta;  eq= equal a una classe
+
+Map.addLayer(change.clip(roi), {},'LC_Change')
+
+var LC_Change =change.clip(roi);
+
+Export.image.toDrive({
+  image: LC_Change,
+  description: 'Forest_Loss',
+  region: roi,
+  crs: 'EPSG:4326',
+    maxPixels: 1e13,
+  scale: 500
+});
