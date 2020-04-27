@@ -1,0 +1,28 @@
+var LC = ee.ImageCollection("MODIS/006/MCD12Q1");
+var GAUL = ee.FeatureCollection("FAO/GAUL/2015/level0"); //confini, Colombia= 57
+
+var LC2015 =(LC.filterDate('2015-01-01','2015-12-31')).first().select('LC_Type1');
+
+var roi = GAUL.filter(ee.Filter.eq("ADM0_NAME", "Colombia")); //Nome campo, field value
+
+print(roi)
+Map.centerObject(roi, 7); //centra la mappa sulla colombia
+Map.addLayer(roi, {}, "roi");
+var bounds = roi.geometry().bounds();
+
+var palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
+               '74A901', '66A000', '529400', '3E8601', '207401', '056201',
+               '004C00', '023B01', '012E01', '011D01', '011301']; // dizionario con dodice colore per ogni classe
+
+Map.addLayer(LC2015.clip(roi),{min:0, max:16, palette:palette})
+
+var layer2 = LC2015.clip(roi)
+
+Export.image.toDrive({
+  image: layer2,
+  description: 'LC_2015',
+  region: roi,
+  crs: 'EPSG:4326',
+    maxPixels: 1e13,
+  scale: 500
+});
