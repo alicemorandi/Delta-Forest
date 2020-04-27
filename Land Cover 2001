@@ -17,3 +17,12 @@ var palette = ['FFFFFF', 'CE7E45', 'DF923D', 'F1B555', 'FCD163', '99B718',
 Map.addLayer(LC2001.clip(roi),{min:0, max:16, palette:palette})
 
 var layer2 = LC2001.clip(roi)
+
+Export.image.toDrive({
+  image: layer2,
+  description: 'LC_2001',
+  region: roi,
+  crs: 'EPSG:4326',
+    maxPixels: 1e13,
+  scale: 500
+});
